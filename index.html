@@ -127,7 +127,7 @@ label.opt select{border:1px solid var(--line);background:var(--surface);border-r
         <span class="seg" id="partSeg" role="group">
           <button data-p="0" aria-pressed="true" data-t="whole"></button><button data-p="1"></button><button data-p="2"></button><button data-p="3"></button><button data-p="4"></button><button data-p="5" data-t="choose"></button>
         </span>
-        <label class="opt"><span data-t="repAyah"></span> <select id="repAyah"><option>1</option><option>2</option><option selected>3</option><option>5</option><option>7</option><option>10</option></select></label>
+        <label class="opt"><span data-t="repAyah"></span> <select id="repAyah"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="5">5</option><option value="7">7</option><option value="10">10</option></select></label>
         <label class="opt"><span data-t="repRange"></span> <select id="repRange"><option value="1"></option><option value="2"></option><option value="3"></option><option value="5"></option><option value="0" data-t="loop"></option></select></label>
         <label class="opt"><span data-t="gapL"></span> <select id="gap"><option value="0" data-t="g0"></option><option value="1" data-t="g1"></option><option value="2" data-t="g2"></option><option value="4" data-t="g4"></option><option value="len" data-t="glen"></option></select></label>
         <label class="opt"><span data-t="speed"></span> <select id="speed"><option>0.75</option><option>0.9</option><option selected>1</option><option>1.25</option></select></label>
@@ -189,7 +189,7 @@ const pos=(s,a)=>lang==="ar"?`${sname(s)} ${N(a)}`:`${stran(s)} ${a}`;
 function save(){try{localStorage.setItem("hz",JSON.stringify({lang,hizb:st.hizb,part:st.part,from:st.from,to:st.to,repAyah:$("repAyah").value,repRange:$("repRange").value,gap:$("gap").value,speed:$("speed").value,quality:$("quality").value}))}catch(e){}}
 function load(){
   lang=(navigator.language||"").toLowerCase().startsWith("ar")?"ar":"en";
-  try{const o=JSON.parse(localStorage.getItem("hz")||"null");if(!o)return;if(o.lang)lang=o.lang;st.hizb=o.hizb||1;st.part=o.part||0;if(o.from!=null){st.from=o.from;st.to=o.to}["repAyah","repRange","gap","speed","quality"].forEach(k=>{if(o[k]!=null)$(k).value=o[k]})}catch(e){}
+  try{const o=JSON.parse(localStorage.getItem("hz")||"null");if(!o)return;if(o.lang)lang=o.lang;st.hizb=o.hizb||1;st.part=o.part||0;if(o.from!=null){st.from=o.from;st.to=o.to}["repAyah","repRange","gap","speed","quality"].forEach(k=>{if(o[k]!=null&&[...$(k).options].some(x=>x.value===String(o[k])))$(k).value=o[k]})}catch(e){}
 }
 
 function applyLang(){
