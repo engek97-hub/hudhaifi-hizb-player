@@ -63,6 +63,12 @@ main{min-width:0}
 .seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
 label.opt{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
 label.opt select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 6px}
+.custom{background:var(--accent-soft);border-radius:10px;padding:8px 12px}
+.custom label.opt{color:var(--ink)}
+.custom select{max-width:44vw}
+.hint{font-size:12px;color:var(--muted)}
+.ay.out,.basmala.out{opacity:.38}
+.ay.pick{box-shadow:inset 0 -2px 0 var(--accent)}
 .progress{height:3px;background:var(--line);border-radius:3px;overflow:hidden}
 .progress i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
 .status{font-size:13px;color:var(--gold);min-height:1em}
@@ -112,13 +118,18 @@ label.opt select{border:1px solid var(--line);background:var(--surface);border-r
       </div>
       <div class="row">
         <span class="seg" id="partSeg" role="group" aria-label="Section">
-          <button data-p="0" aria-pressed="true">Whole hizb</button><button data-p="1">¼</button><button data-p="2">½</button><button data-p="3">¾</button><button data-p="4">4/4</button>
+          <button data-p="0" aria-pressed="true">Whole hizb</button><button data-p="1">¼</button><button data-p="2">½</button><button data-p="3">¾</button><button data-p="4">4/4</button><button data-p="5">Choose ayahs</button>
         </span>
         <label class="opt">Repeat ayah <select id="repAyah"><option>1</option><option>2</option><option selected>3</option><option>5</option><option>7</option><option>10</option></select></label>
         <label class="opt">Repeat section <select id="repRange"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option><option value="5">5×</option><option value="0">Loop</option></select></label>
         <label class="opt">Pause after ayah <select id="gap"><option value="0">None</option><option value="1">1 s</option><option value="2">2 s</option><option value="4">4 s</option><option value="len">Ayah length (recite back)</option></select></label>
         <label class="opt">Speed <select id="speed"><option>0.75</option><option>0.9</option><option selected>1</option><option>1.25</option></select></label>
         <label class="opt">Quality <select id="quality"><option value="Hudhaify_64kbps" selected>64 kbps</option><option value="Hudhaify_128kbps">128 kbps</option><option value="Hudhaify_32kbps">32 kbps (data saver)</option></select></label>
+      </div>
+      <div class="row custom" id="customRow" hidden>
+        <label class="opt">From <select id="fromAy"></select></label>
+        <label class="opt">To <select id="toAy"></select></label>
+        <span class="hint">Or tap an ayah in the text to set the start, then tap another to set the end.</span>
       </div>
       <div class="row" style="justify-content:space-between"><span class="now" id="now">Tap Play, or tap any ayah to start from it.</span><span class="status" id="status"></span></div>
       <div class="progress"><i id="prog"></i></div>
@@ -135,14 +146,14 @@ const RUBS=[[1,1,2,25,1,5],[2,26,2,43,5,7],[2,44,2,59,7,9],[2,60,2,74,9,11],[2,7
 
 const AR_NUM=n=>String(n);
 const $=id=>document.getElementById(id);
-const st={hizb:1,part:0,queue:[],i:0,ayRep:0,rangeRep:0,playing:false,timer:null};
+const st={hizb:1,part:0,from:0,to:2,pick:0,queue:[],i:0,ayRep:0,rangeRep:0,playing:false,timer:null};
 const audio=new Audio(); audio.preload="auto";
 const pre=new Audio(); pre.preload="auto";
 const pad=n=>String(n).padStart(3,"0");
 const url=(s,a)=>`https://everyayah.com/data/${$("quality").value}/${pad(s)}${pad(a)}.mp3`;
 const sname=s=>SURAHS[s-1][0], stran=s=>SURAHS[s-1][1];
-function save(){try{localStorage.setItem("hz",JSON.stringify({hizb:st.hizb,part:st.part,repAyah:$("repAyah").value,repRange:$("repRange").value,gap:$("gap").value,speed:$("speed").value,quality:$("quality").value}))}catch(e){}}
-function load(){try{const o=JSON.parse(localStorage.getItem("hz")||"null");if(!o)return;st.hizb=o.hizb||1;st.part=o.part||0;["repAyah","repRange","gap","speed","quality"].forEach(k=>{if(o[k]!=null)$(k).value=o[k]})}catch(e){}}
+function save(){try{localStorage.setItem("hz",JSON.stringify({hizb:st.hizb,part:st.part,from:st.from,to:st.to,repAyah:$("repAyah").value,repRange:$("repRange").value,gap:$("gap").value,speed:$("speed").value,quality:$("quality").value}))}catch(e){}}
+function load(){try{const o=JSON.parse(localStorage.getItem("hz")||"null");if(!o)return;st.hizb=o.hizb||1;st.part=o.part||0;if(o.from!=null){st.from=o.from;st.to=o.to}["repAyah","repRange","gap","speed","quality"].forEach(k=>{if(o[k]!=null)$(k).value=o[k]})}catch(e){}}
 
 function buildIndex(){
   const box=$("index");box.innerHTML="";
@@ -154,7 +165,7 @@ function buildIndex(){
       const r=RUBS[(h-1)*4];
       const b=document.createElement("button");b.dataset.h=h;
       b.innerHTML=`<b>Hizb ${h}</b><span>${sname(r[0])} ${r[1]}</span>`;
-      b.onclick=()=>{selectHizb(h,0);$("side").classList.remove("open")};
+      b.onclick=()=>{selectHizb(h,st.part===5?5:0);$("side").classList.remove("open")};
       g.appendChild(b);
     }
     box.appendChild(d);
@@ -172,10 +183,20 @@ function ayahsBetween(s1,a1,s2,a2){
   }
   return out;
 }
+function hizbAyahs(){const [ra]=rangeOf(st.hizb,0),[,rb]=rangeOf(st.hizb,0);return ayahsBetween(ra[0],ra[1],rb[2],rb[3])}
+function clampCustom(){const n=hizbAyahs().length;if(!(st.from>=0&&st.from<n))st.from=0;if(!(st.to>=st.from&&st.to<n))st.to=Math.min(st.from+2,n-1)}
+function fillCustom(){
+  const list=hizbAyahs();
+  const opts=list.map(([s,a],k)=>`<option value="${k}">${stran(s)} ${a}</option>`).join("");
+  $("fromAy").innerHTML=opts;$("toAy").innerHTML=opts;
+  $("fromAy").value=st.from;$("toAy").value=st.to;
+}
 function buildQueue(){
-  const [ra,rb]=rangeOf(st.hizb,st.part);
+  const [ra,rb]=rangeOf(st.hizb,st.part&&st.part<5?st.part:0);
   const q=[];
-  for(const [s,a] of ayahsBetween(ra[0],ra[1],rb[2],rb[3])){
+  let list=ayahsBetween(ra[0],ra[1],rb[2],rb[3]);
+  if(st.part===5)list=list.slice(st.from,st.to+1);
+  for(const [s,a] of list){
     if(a===1&&s!==1&&s!==9)q.push({s,a:0});   // basmala before the surah
     q.push({s,a});
   }
@@ -196,19 +217,30 @@ function renderText(){
     if(k&&k>1){const m=document.createElement("span");m.className="quarter";m.textContent=["","","Quarter 2","Quarter 3","Quarter 4"][k];cur.appendChild(m)}
     const sp=document.createElement("span");sp.className="ay";sp.id=`a-${s}-${a}`;
     sp.innerHTML=SURAHS[s-1][2][a-1]+` <span class="num">${a}</span> `;
-    sp.onclick=()=>jumpTo(s,a);
+    sp.onclick=()=>onAyTap(s,a);
     cur.appendChild(sp);
   }
 }
 function header(){
+  $("customRow").hidden=st.part!==5;
+  if(st.part===5){
+    const L=hizbAyahs(),[fs,fa]=L[st.from],[ts,ta]=L[st.to],n=st.to-st.from+1;
+    $("hTitle").textContent=`Hizb ${st.hizb} · ${n} ayah${n>1?"s":""}`;
+    $("hRange").textContent=`${stran(fs)} ${fa} → ${stran(ts)} ${ta} · Juz ${Math.ceil(st.hizb/2)}`;
+    $("fromAy").value=st.from;$("toAy").value=st.to;
+  }else{
   const [ra,rb]=rangeOf(st.hizb,st.part);
   $("hTitle").textContent=`Hizb ${st.hizb}`+(st.part?` · Quarter ${st.part}`:"");
   $("hRange").textContent=`${stran(ra[0])} ${ra[1]} → ${stran(rb[2])} ${rb[3]} · Juz ${Math.ceil(st.hizb/2)} · pages ${ra[4]}–${rb[5]}`;
+  }
+  markRange();
   document.querySelectorAll(".hz button").forEach(b=>b.setAttribute("aria-current",String(+b.dataset.h===st.hizb)));
   document.querySelectorAll("#partSeg button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.p===st.part)));
 }
-function selectHizb(h,part){
-  stop();st.hizb=h;st.part=part;buildQueue();renderText();header();highlight();save();
+function selectHizb(h,part,keepRange){
+  if(h!==st.hizb&&!keepRange){st.from=0;st.to=2}
+  if(part===5&&st.part!==5&&$("repRange").value==="1")$("repRange").value="0"; // ayah-range practice loops by default
+  stop();st.hizb=h;st.part=part;st.pick=0;clampCustom();buildQueue();renderText();fillCustom();header();highlight();save();
   window.scrollTo({top:0});
   const cb=document.querySelector(`.hz button[data-h="${h}"]`);if(cb)cb.scrollIntoView({block:"nearest"});
 }
@@ -242,7 +274,7 @@ function advance(){
   if(st.i>=st.queue.length){
     const rr=+$("repRange").value;st.rangeRep++;
     if(rr===0||st.rangeRep<rr){st.i=0;playCurrent();return}
-    st.i=0;st.rangeRep=0;stop();$("now").innerHTML=`<b>Finished</b> · Hizb ${st.hizb}${st.part?" quarter "+st.part:""}. Tap Play to go again or pick the next hizb.`;$("prog").style.width="100%";return;
+    st.i=0;st.rangeRep=0;stop();$("now").innerHTML=`<b>Finished</b> · ${st.part===5?"Your ayahs":"Hizb "+st.hizb+(st.part?" quarter "+st.part:"")}. Tap Play to go again or pick the next hizb.`;$("prog").style.width="100%";return;
   }
   playCurrent();
 }
@@ -259,6 +291,25 @@ audio.addEventListener("waiting",()=>{$("status").textContent="Loading…"});
 audio.addEventListener("playing",()=>{$("status").textContent=""});
 function setPlaying(p){st.playing=p;$("playBtn").textContent=p?"Pause":"Play"}
 function stop(){clearTimeout(st.timer);audio.pause();setPlaying(false);$("status").textContent=""}
+function markRange(){
+  const L=hizbAyahs();
+  L.forEach(([s,a],k)=>{const el=$(`a-${s}-${a}`);if(!el)return;
+    el.classList.toggle("out",st.part===5&&(k<st.from||k>st.to));
+    el.classList.toggle("pick",st.part===5&&st.pick===1&&k===st.from)});
+  document.querySelectorAll(".basmala").forEach(b=>{const s=+b.id.slice(2),k=L.findIndex(x=>x[0]===s&&x[1]===1);b.classList.toggle("out",st.part===5&&(k<st.from||k>st.to))});
+}
+function setRange(f,t){
+  if(t<f)[f,t]=[t,f];
+  stop();st.from=f;st.to=t;buildQueue();header();highlight();save();
+}
+function onAyTap(s,a){
+  if(st.part!==5){jumpTo(s,a);return}
+  const k=hizbAyahs().findIndex(x=>x[0]===s&&x[1]===a);
+  if(st.pick===0){st.pick=1;setRange(k,k);$("status").textContent="Start set. Tap the last ayah of your range."}
+  else{st.pick=0;setRange(st.from,k);$("status").textContent=""}
+}
+$("fromAy").onchange=()=>{st.pick=0;const f=+$("fromAy").value;setRange(f,Math.max(f,st.to))};
+$("toAy").onchange=()=>{st.pick=0;const t=+$("toAy").value;setRange(Math.min(st.from,t),t)};
 function jumpTo(s,a){const k=st.queue.findIndex(x=>x.s===s&&x.a===a);if(k<0)return;st.i=k;st.ayRep=0;setPlaying(true);playCurrent()}
 $("playBtn").onclick=()=>{
   if(st.playing){audio.pause();clearTimeout(st.timer);setPlaying(false);return}
