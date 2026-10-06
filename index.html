@@ -162,7 +162,7 @@ const T={
   finished:w=>`<b>Finished</b> · ${w}. Tap Play to go again or pick the next hizb.`,yourAyahs:"Your ayahs",
   loading:"Loading…",turn:"Your turn: recite the ayah",startSet:"Start set. Tap the last ayah of your range.",
   errStart:"Couldn't start audio. Check your connection and tap Play again.",errLoad:"This ayah failed to load. Check your connection.",surah:s=>s},
- ar:{reciter:"الشيخ علي بن عبدالرحمن الحذيفي · رواية حفص عن عاصم",hizbs:"☰ الأحزاب",lang:"English",play:"تشغيل",pause:"إيقاف مؤقت",prev:"الآية السابقة",next:"الآية التالية",
+ ar:{reciter:"الشيخ علي بن عبدالرحمن الحذيفي – رواية حفص عن عاصم",hizbs:"☰ الأحزاب",lang:"English",play:"تشغيل",pause:"إيقاف مؤقت",prev:"الآية السابقة",next:"الآية التالية",
   whole:"الحزب كاملاً",q:n=>`الربع ${N(n)}`,qTitle:n=>`الربع ${N(n)}`,choose:"اختر الآيات",repAyah:"تكرار الآية",repRange:"تكرار المقطع",x:n=>`${N(n)} مرات`.replace(/^١ مرات$/,"مرة واحدة").replace(/^٢ مرات$/,"مرتان"),loop:"تكرار مستمر",
   gapL:"مهلة بعد الآية",g0:"بدون",g1:"ثانية",g2:"ثانيتان",g4:"٤ ثوانٍ",glen:"بطول الآية (للتسميع)",speed:"السرعة",quality:"الجودة",q32:"32 kbps (توفير البيانات)",
   from:"من",to:"إلى",hint:"أو اضغط على آية في النص لتحديد البداية، ثم على آية أخرى لتحديد النهاية.",
@@ -175,6 +175,7 @@ const T={
 };
 let lang="en";
 const N=n=>lang==="ar"?Number(n).toLocaleString("ar-EG",{useGrouping:false}):String(n);
+const fixSep=s=>lang==="ar"?s.replace(/ · /g," – "):s;
 const t=(k,...a)=>{const v=T[lang][k];return typeof v==="function"?v(...a):v};
 const $=id=>document.getElementById(id);
 const st={hizb:1,part:0,from:0,to:2,pick:0,queue:[],i:0,ayRep:0,rangeRep:0,playing:false,timer:null};
@@ -272,13 +273,13 @@ function header(){
   const jz=`${t("juz")} ${N(Math.ceil(st.hizb/2))}`;
   if(st.part===5){
     const L=hizbAyahs(),[fs,fa]=L[st.from],[ts,ta]=L[st.to];
-    $("hTitle").textContent=`${t("hizb")} ${N(st.hizb)} · ${t("nAyahs",st.to-st.from+1)}`;
-    $("hRange").textContent=`${pos(fs,fa)} ← ${pos(ts,ta)} · ${jz}`.replace("←",lang==="ar"?"←":"→");
+    $("hTitle").textContent=fixSep(`${t("hizb")} ${N(st.hizb)} · ${t("nAyahs",st.to-st.from+1)}`);
+    $("hRange").textContent=fixSep(`${pos(fs,fa)} ${lang==="ar"?"←":"→"} ${pos(ts,ta)} · ${jz}`);
     $("fromAy").value=st.from;$("toAy").value=st.to;
   }else{
     const [ra,rb]=rangeOf(st.hizb,st.part);
-    $("hTitle").textContent=`${t("hizb")} ${N(st.hizb)}`+(st.part?` · ${t("qTitle",st.part)}`:"");
-    $("hRange").textContent=`${pos(ra[0],ra[1])} ${lang==="ar"?"←":"→"} ${pos(rb[2],rb[3])} · ${jz} · ${t("pages")} ${N(ra[4])}–${N(rb[5])}`;
+    $("hTitle").textContent=fixSep(`${t("hizb")} ${N(st.hizb)}`+(st.part?` · ${t("qTitle",st.part)}`:""));
+    $("hRange").textContent=fixSep(`${pos(ra[0],ra[1])} ${lang==="ar"?"←":"→"} ${pos(rb[2],rb[3])} · ${jz} · ${t("pages")} ${N(ra[4])}${lang==="ar"?" إلى ":"–"}${N(rb[5])}`);
   }
   document.querySelectorAll(".hz button").forEach(b=>b.setAttribute("aria-current",String(+b.dataset.h===st.hizb)));
   document.querySelectorAll("#partSeg button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.p===st.part)));
@@ -319,8 +320,8 @@ function highlight(scroll){
   $("prog").style.width=(done/ayCount*100)+"%";
   if(!st.playing&&st.i===0&&st.ayRep===0&&st.rangeRep===0){$("now").textContent=t("intro");return}
   const rr=+$("repRange").value;
-  $("now").innerHTML=it.a===0?`<b>${t("basmala")}</b> · ${t("before",sn(it.s))}`:
-    `<b>${pos(it.s,it.a)}</b> · ${t("ayOf",done+1,ayCount)} · ${t("rep",st.ayRep+1,$("repAyah").value)}`+(rr!==1?` · ${t("round")} ${N(st.rangeRep+1)}${rr?"/"+N(rr):""}`:"");
+  $("now").innerHTML=fixSep(it.a===0?`<b>${t("basmala")}</b> · ${t("before",sn(it.s))}`:
+    `<b>${pos(it.s,it.a)}</b> · ${t("ayOf",done+1,ayCount)} · ${t("rep",st.ayRep+1,$("repAyah").value)}`+(rr!==1?` · ${t("round")} ${N(st.rangeRep+1)}${rr?"/"+N(rr):""}`:""));
 }
 function playCurrent(){
   clearTimeout(st.timer);
@@ -342,7 +343,7 @@ function advance(){
     if(rr===0||st.rangeRep<rr){st.i=0;playCurrent();return}
     st.i=0;st.rangeRep=0;stop();
     const what=st.part===5?t("yourAyahs"):`${t("hizb")} ${N(st.hizb)}${st.part?" · "+t("qTitle",st.part):""}`;
-    $("now").innerHTML=t("finished",what);$("prog").style.width="100%";return;
+    $("now").innerHTML=fixSep(t("finished",what));$("prog").style.width="100%";return;
   }
   playCurrent();
 }
