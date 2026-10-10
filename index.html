@@ -106,7 +106,7 @@ label.opt select{border:1px solid var(--line);background:var(--surface);border-r
 <body>
 <div class="app">
   <aside id="side">
-    <div class="brand"><span class="ar">ختمة الأحزاب</span><small data-t="reciter"></small></div>
+    <div class="brand"><span class="ar">ختمة الأحزاب</span><small id="recName"></small></div>
     <div id="index"></div>
   </aside>
   <main>
@@ -127,11 +127,12 @@ label.opt select{border:1px solid var(--line);background:var(--surface);border-r
         <span class="seg" id="partSeg" role="group">
           <button data-p="0" aria-pressed="true" data-t="whole"></button><button data-p="1"></button><button data-p="2"></button><button data-p="3"></button><button data-p="4"></button><button data-p="5" data-t="choose"></button>
         </span>
+        <label class="opt"><span data-t="recL"></span> <select id="reciter"><option value="hudhaifi" data-t="recH"></option><option value="nufais" data-t="recN"></option></select></label>
         <label class="opt"><span data-t="repAyah"></span> <select id="repAyah"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="5">5</option><option value="7">7</option><option value="10">10</option></select></label>
         <label class="opt"><span data-t="repRange"></span> <select id="repRange"><option value="1"></option><option value="2"></option><option value="3"></option><option value="5"></option><option value="0" data-t="loop"></option></select></label>
         <label class="opt"><span data-t="gapL"></span> <select id="gap"><option value="0" data-t="g0"></option><option value="1" data-t="g1"></option><option value="2" data-t="g2"></option><option value="4" data-t="g4"></option><option value="len" data-t="glen"></option></select></label>
         <label class="opt"><span data-t="speed"></span> <select id="speed"><option>0.75</option><option>0.9</option><option selected>1</option><option>1.25</option></select></label>
-        <label class="opt"><span data-t="quality"></span> <select id="quality"><option value="Hudhaify_64kbps" selected>64 kbps</option><option value="Hudhaify_128kbps">128 kbps</option><option value="Hudhaify_32kbps" data-t="q32"></option></select></label>
+        <label class="opt" id="qualityOpt"><span data-t="quality"></span> <select id="quality"><option value="Hudhaify_64kbps" selected>64 kbps</option><option value="Hudhaify_128kbps">128 kbps</option><option value="Hudhaify_32kbps" data-t="q32"></option></select></label>
       </div>
       <div class="row custom" id="customRow" hidden>
         <label class="opt"><span data-t="from"></span> <select id="fromAy"></select></label>
@@ -152,21 +153,21 @@ const SURAHS=[["الفاتحة","Al-Fatihah",["بِسۡمِ ٱللَّهِ ٱل�
 const RUBS=[[1,1,2,25,1,5],[2,26,2,43,5,7],[2,44,2,59,7,9],[2,60,2,74,9,11],[2,75,2,91,11,14],[2,92,2,105,14,16],[2,106,2,123,17,19],[2,124,2,141,19,21],[2,142,2,157,22,24],[2,158,2,176,24,26],[2,177,2,188,27,29],[2,189,2,202,29,31],[2,203,2,218,32,34],[2,219,2,232,34,37],[2,233,2,242,37,39],[2,243,2,252,39,41],[2,253,2,262,42,44],[2,263,2,271,44,46],[2,272,2,282,46,48],[2,283,3,14,49,51],[3,15,3,32,51,54],[3,33,3,51,54,56],[3,52,3,74,56,59],[3,75,3,92,59,62],[3,93,3,112,62,64],[3,113,3,132,64,66],[3,133,3,152,67,69],[3,153,3,170,69,72],[3,171,3,185,72,74],[3,186,3,200,74,76],[4,1,4,11,77,78],[4,12,4,23,79,81],[4,24,4,35,82,84],[4,36,4,57,84,87],[4,58,4,73,87,89],[4,74,4,87,89,92],[4,88,4,99,92,94],[4,100,4,113,94,96],[4,114,4,134,97,99],[4,135,4,147,100,101],[4,148,4,162,102,103],[4,163,4,176,104,106],[5,1,5,11,106,109],[5,12,5,26,109,112],[5,27,5,40,112,114],[5,41,5,50,114,116],[5,51,5,66,117,119],[5,67,5,81,119,121],[5,82,5,96,121,124],[5,97,5,108,124,125],[5,109,6,12,126,129],[6,13,6,35,129,131],[6,36,6,58,132,134],[6,59,6,73,134,136],[6,74,6,94,137,139],[6,95,6,110,140,141],[6,111,6,126,142,144],[6,127,6,140,144,146],[6,141,6,150,146,148],[6,151,6,165,148,150],[7,1,7,30,151,153],[7,31,7,46,154,156],[7,47,7,64,156,158],[7,65,7,87,158,161],[7,88,7,116,162,164],[7,117,7,141,164,167],[7,142,7,155,167,169],[7,156,7,170,170,172],[7,171,7,188,173,175],[7,189,7,206,175,176],[8,1,8,21,177,179],[8,22,8,40,179,181],[8,41,8,60,182,184],[8,61,8,75,184,186],[9,1,9,18,187,189],[9,19,9,33,189,192],[9,34,9,45,192,194],[9,46,9,59,194,196],[9,60,9,74,196,199],[9,75,9,92,199,201],[9,93,9,110,201,204],[9,111,9,121,204,206],[9,122,10,10,206,209],[10,11,10,25,209,211],[10,26,10,52,212,214],[10,53,10,70,214,216],[10,71,10,89,217,219],[10,90,11,5,219,221],[11,6,11,23,222,224],[11,24,11,40,224,226],[11,41,11,60,226,228],[11,61,11,83,228,231],[11,84,11,107,231,233],[11,108,12,6,233,236],[12,7,12,29,236,238],[12,30,12,52,238,241],[12,53,12,76,242,244],[12,77,12,100,244,247],[12,101,13,4,247,249],[13,5,13,18,249,251],[13,19,13,34,252,253],[13,35,14,9,254,256],[14,10,14,27,256,259],[14,28,14,52,259,261],[15,1,15,49,262,264],[15,50,15,99,264,267],[16,1,16,29,267,270],[16,30,16,50,270,272],[16,51,16,74,272,275],[16,75,16,89,275,277],[16,90,16,110,277,279],[16,111,16,128,280,281],[17,1,17,22,282,284],[17,23,17,49,284,286],[17,50,17,69,287,289],[17,70,17,98,289,292],[17,99,18,16,292,295],[18,17,18,31,295,297],[18,32,18,50,297,299],[18,51,18,74,299,301],[18,75,18,98,302,304],[18,99,19,21,304,306],[19,22,19,58,306,309],[19,59,19,98,309,312],[20,1,20,54,312,315],[20,55,20,82,315,317],[20,83,20,110,317,319],[20,111,20,135,319,321],[21,1,21,28,322,324],[21,29,21,50,324,326],[21,51,21,82,326,329],[21,83,21,112,329,331],[22,1,22,18,332,334],[22,19,22,37,334,336],[22,38,22,59,336,339],[22,60,22,78,339,341],[23,1,23,35,342,344],[23,36,23,74,344,346],[23,75,23,118,347,349],[24,1,24,20,350,351],[24,21,24,34,352,354],[24,35,24,52,354,356],[24,53,24,64,356,359],[25,1,25,20,359,361],[25,21,25,52,362,364],[25,53,25,77,364,366],[26,1,26,51,367,369],[26,52,26,110,369,371],[26,111,26,180,371,374],[26,181,26,227,374,376],[27,1,27,26,377,379],[27,27,27,55,379,381],[27,56,27,81,382,384],[27,82,28,11,384,386],[28,12,28,28,386,388],[28,29,28,50,389,391],[28,51,28,75,392,394],[28,76,28,88,394,396],[29,1,29,25,396,399],[29,26,29,45,399,401],[29,46,29,69,402,404],[30,1,30,30,404,407],[30,31,30,53,407,410],[30,54,31,21,410,413],[31,22,32,10,413,415],[32,11,32,30,415,417],[33,1,33,17,418,420],[33,18,33,30,420,421],[33,31,33,50,422,424],[33,51,33,59,425,426],[33,60,34,9,426,429],[34,10,34,23,429,431],[34,24,34,45,431,433],[34,46,35,14,433,436],[35,15,35,40,436,439],[35,41,36,27,439,441],[36,28,36,59,442,444],[36,60,37,21,444,446],[37,22,37,82,446,449],[37,83,37,144,449,451],[37,145,38,20,451,454],[38,21,38,51,454,456],[38,52,39,7,456,459],[39,8,39,31,459,461],[39,32,39,52,462,464],[39,53,39,75,464,467],[40,1,40,20,467,469],[40,21,40,40,469,471],[40,41,40,65,472,474],[40,66,41,8,474,477],[41,9,41,24,477,479],[41,25,41,46,479,481],[41,47,42,12,482,484],[42,13,42,26,484,486],[42,27,42,50,486,488],[42,51,43,23,488,491],[43,24,43,56,491,493],[43,57,44,16,493,496],[44,17,45,11,496,499],[45,12,45,37,499,502],[46,1,46,20,502,504],[46,21,47,9,505,507],[47,10,47,32,507,510],[47,33,48,17,510,513],[48,18,48,29,513,515],[49,1,49,13,515,517],[49,14,50,26,517,519],[50,27,51,30,519,521],[51,31,52,23,522,524],[52,24,53,25,524,526],[53,26,54,8,526,529],[54,9,54,55,529,531],[55,1,55,78,531,534],[56,1,56,74,534,536],[56,75,57,15,536,539],[57,16,57,29,539,541],[58,1,58,13,542,544],[58,14,59,10,544,547],[59,11,60,6,547,550],[60,7,61,14,550,552],[62,1,63,3,553,554],[63,4,64,18,554,557],[65,1,65,12,558,559],[66,1,66,12,560,561],[67,1,67,30,562,564],[68,1,68,52,564,566],[69,1,70,18,566,569],[70,19,71,28,569,571],[72,1,73,19,572,574],[73,20,74,56,575,577],[75,1,76,18,577,579],[76,19,77,50,579,581],[78,1,79,46,582,584],[80,1,81,29,585,586],[82,1,83,36,587,589],[84,1,86,17,589,591],[87,1,89,30,591,594],[90,1,93,11,594,596],[94,1,100,8,596,599],[100,9,114,6,599,604]];
 
 const T={
- en:{reciter:"Sheikh Ali Al-Hudhaifi · Hafs ʿan ʿĀsim",hizbs:"☰ Hizbs",lang:"عربي",play:"Play",pause:"Pause",prev:"Previous ayah",next:"Next ayah",
+ en:{reciter:"Sheikh Ali Al-Hudhaifi · Hafs ʿan ʿĀsim",reciterN:"Sheikh Ahmad Al-Nufais · Hafs ʿan ʿĀsim",recL:"Reciter",recH:"Ali Al-Hudhaifi (memorization)",recN:"Ahmad Al-Nufais (listening)",errTiming:"Couldn't load Sheikh Al-Nufais's ayah timings. Check your connection and tap Play again.",hizbs:"☰ Hizbs",lang:"عربي",play:"Play",pause:"Pause",prev:"Previous ayah",next:"Next ayah",
   whole:"Whole hizb",q:n=>["","¼","½","¾","4/4"][n],qTitle:n=>`Quarter ${n}`,choose:"Choose ayahs",repAyah:"Repeat ayah",repRange:"Repeat section",x:n=>`${n}×`,loop:"Loop",
   gapL:"Pause after ayah",g0:"None",g1:"1 s",g2:"2 s",g4:"4 s",glen:"Ayah length (recite back)",speed:"Speed",quality:"Quality",q32:"32 kbps (data saver)",
   from:"From",to:"To",hint:"Or tap an ayah in the text to set the start, then tap another to set the end.",
-  note:"Audio: ayah-by-ayah recordings of Sheikh Ali bin Abdur-Rahman Al-Hudhaifi, streamed from everyayah.com, so an internet connection is needed. Hizb and quarter boundaries follow the Madinah mushaf (page numbers shown are its pages).",
+  note:"Audio: Sheikh Ali Al-Hudhaifi's ayah-by-ayah recordings from everyayah.com, and Sheikh Ahmad Al-Nufais's recitation with ayah timings from mp3quran.net. Both stream, so an internet connection is needed. Hizb and quarter boundaries follow the Madinah mushaf (page numbers shown are its pages).",
   juz:"Juz",hizb:"Hizb",pages:"pages",nAyahs:n=>`${n} ayah${n>1?"s":""}`,intro:"Tap Play, or tap any ayah to start from it.",
   basmala:"Basmala",before:s=>`before ${s}`,ayOf:(a,b)=>`ayah ${a} of ${b}`,rep:(a,b)=>`repeat ${a}/${b}`,round:"round",
   finished:w=>`<b>Finished</b> · ${w}. Tap Play to go again or pick the next hizb.`,yourAyahs:"Your ayahs",
   loading:"Loading…",turn:"Your turn: recite the ayah",startSet:"Start set. Tap the last ayah of your range.",
   errStart:"Couldn't start audio. Check your connection and tap Play again.",errLoad:"This ayah failed to load. Check your connection.",surah:s=>s},
- ar:{reciter:"الشيخ علي بن عبدالرحمن الحذيفي – رواية حفص عن عاصم",hizbs:"☰ الأحزاب",lang:"English",play:"تشغيل",pause:"إيقاف مؤقت",prev:"الآية السابقة",next:"الآية التالية",
+ ar:{reciter:"الشيخ علي بن عبدالرحمن الحذيفي – رواية حفص عن عاصم",reciterN:"الشيخ أحمد النفيس – رواية حفص عن عاصم",recL:"القارئ",recH:"علي الحذيفي (للحفظ)",recN:"أحمد النفيس (للاستماع)",errTiming:"تعذّر تحميل توقيت آيات الشيخ النفيس. تحقق من الاتصال واضغط تشغيل مرة أخرى.",hizbs:"☰ الأحزاب",lang:"English",play:"تشغيل",pause:"إيقاف مؤقت",prev:"الآية السابقة",next:"الآية التالية",
   whole:"الحزب كاملاً",q:n=>`الربع ${N(n)}`,qTitle:n=>`الربع ${N(n)}`,choose:"اختر الآيات",repAyah:"تكرار الآية",repRange:"تكرار المقطع",x:n=>`${N(n)} مرات`.replace(/^١ مرات$/,"مرة واحدة").replace(/^٢ مرات$/,"مرتان"),loop:"تكرار مستمر",
   gapL:"مهلة بعد الآية",g0:"بدون",g1:"ثانية",g2:"ثانيتان",g4:"٤ ثوانٍ",glen:"بطول الآية (للتسميع)",speed:"السرعة",quality:"الجودة",q32:"32 kbps (توفير البيانات)",
   from:"من",to:"إلى",hint:"أو اضغط على آية في النص لتحديد البداية، ثم على آية أخرى لتحديد النهاية.",
-  note:"التلاوة: تسجيلات الشيخ علي بن عبدالرحمن الحذيفي آيةً آية من موقع everyayah.com، لذا يلزم الاتصال بالإنترنت. حدود الأحزاب والأرباع وأرقام الصفحات حسب مصحف المدينة النبوية.",
+  note:"التلاوة: تسجيلات الشيخ علي الحذيفي آيةً آية من موقع everyayah.com، وتلاوة الشيخ أحمد النفيس مع توقيت الآيات من موقع mp3quran.net، ويلزم الاتصال بالإنترنت. حدود الأحزاب والأرباع وأرقام الصفحات حسب مصحف المدينة النبوية.",
   juz:"الجزء",hizb:"الحزب",pages:"الصفحات",nAyahs:n=>n===1?"آية واحدة":n===2?"آيتان":n<=10?`${N(n)} آيات`:`${N(n)} آية`,intro:"اضغط تشغيل، أو اضغط على أي آية لتبدأ منها.",
   basmala:"البسملة",before:s=>`قبل سورة ${s}`,ayOf:(a,b)=>`الآية ${N(a)} من ${N(b)}`,rep:(a,b)=>`التكرار ${N(a)}/${N(b)}`,round:"الدورة",
   finished:w=>`<b>انتهى</b> · ${w}. اضغط تشغيل للإعادة أو اختر الحزب التالي.`,yourAyahs:"آياتك المختارة",
@@ -178,7 +179,7 @@ const N=n=>lang==="ar"?Number(n).toLocaleString("ar-EG",{useGrouping:false}):Str
 const fixSep=s=>lang==="ar"?s.replace(/ · /g," – "):s;
 const t=(k,...a)=>{const v=T[lang][k];return typeof v==="function"?v(...a):v};
 const $=id=>document.getElementById(id);
-const st={hizb:1,part:0,from:0,to:2,pick:0,queue:[],i:0,ayRep:0,rangeRep:0,playing:false,timer:null};
+const st={rec:"hudhaifi",hizb:1,part:0,from:0,to:2,pick:0,queue:[],i:0,ayRep:0,rangeRep:0,playing:false,timer:null};
 const audio=new Audio(); audio.preload="auto";
 const pre=new Audio(); pre.preload="auto";
 const pad=n=>String(n).padStart(3,"0");
@@ -186,10 +187,10 @@ const url=(s,a)=>`https://everyayah.com/data/${$("quality").value}/${pad(s)}${pa
 const sname=s=>SURAHS[s-1][0], stran=s=>SURAHS[s-1][1];
 const sn=s=>lang==="ar"?sname(s):stran(s);           // surah name in the UI language
 const pos=(s,a)=>lang==="ar"?`${sname(s)} ${N(a)}`:`${stran(s)} ${a}`;
-function save(){try{localStorage.setItem("hz",JSON.stringify({lang,hizb:st.hizb,part:st.part,from:st.from,to:st.to,repAyah:$("repAyah").value,repRange:$("repRange").value,gap:$("gap").value,speed:$("speed").value,quality:$("quality").value}))}catch(e){}}
+function save(){try{localStorage.setItem("hz",JSON.stringify({lang,rec:st.rec,hizb:st.hizb,part:st.part,from:st.from,to:st.to,repAyah:$("repAyah").value,repRange:$("repRange").value,gap:$("gap").value,speed:$("speed").value,quality:$("quality").value}))}catch(e){}}
 function load(){
   lang=(navigator.language||"").toLowerCase().startsWith("ar")?"ar":"en";
-  try{const o=JSON.parse(localStorage.getItem("hz")||"null");if(!o)return;if(o.lang)lang=o.lang;st.hizb=o.hizb||1;st.part=o.part||0;if(o.from!=null){st.from=o.from;st.to=o.to}["repAyah","repRange","gap","speed","quality"].forEach(k=>{if(o[k]!=null&&[...$(k).options].some(x=>x.value===String(o[k])))$(k).value=o[k]})}catch(e){}
+  try{const o=JSON.parse(localStorage.getItem("hz")||"null");if(!o)return;if(o.lang)lang=o.lang;if(o.rec==="nufais")st.rec="nufais";st.hizb=o.hizb||1;st.part=o.part||0;if(o.from!=null){st.from=o.from;st.to=o.to}["repAyah","repRange","gap","speed","quality"].forEach(k=>{if(o[k]!=null&&[...$(k).options].some(x=>x.value===String(o[k])))$(k).value=o[k]})}catch(e){}
 }
 
 function applyLang(){
@@ -198,6 +199,7 @@ function applyLang(){
   document.querySelectorAll("#partSeg button").forEach(b=>{const p=+b.dataset.p;if(p>=1&&p<=4){b.textContent=t("q",p);b.setAttribute("aria-label",t("qTitle",p))}});
   [...$("repRange").options].forEach(o=>{if(o.value!=="0")o.textContent=t("x",+o.value)});
   [...$("repAyah").options].forEach(o=>o.textContent=N(o.value));
+  applyReciter();
   $("langBtn").textContent=t("lang");$("langBtn").setAttribute("lang",lang==="ar"?"en":"ar");
   $("prevBtn").setAttribute("aria-label",t("prev"));$("nextBtn").setAttribute("aria-label",t("next"));
   $("side").setAttribute("aria-label",t("hizbs"));
@@ -323,16 +325,65 @@ function highlight(scroll){
   $("now").innerHTML=fixSep(it.a===0?`<b>${t("basmala")}</b> · ${t("before",sn(it.s))}`:
     `<b>${pos(it.s,it.a)}</b> · ${t("ayOf",done+1,ayCount)} · ${t("rep",st.ayRep+1,$("repAyah").value)}`+(rr!==1?` · ${t("round")} ${N(st.rangeRep+1)}${rr?"/"+N(rr):""}`:""));
 }
-function playCurrent(){
-  clearTimeout(st.timer);
-  const it=st.queue[st.i];if(!it){stop();return}
-  const [s,a]=it.a===0?[1,1]:[it.s,it.a];
-  audio.src=url(s,a);audio.playbackRate=+$("speed").value;
-  $("status").textContent="";
-  audio.play().catch(()=>{$("status").textContent=t("errStart");setPlaying(false)});
-  highlight(true);
-  const nx=st.queue[st.i+1];if(nx){const [ns,na]=nx.a===0?[1,1]:[nx.s,nx.a];pre.src=url(ns,na)}  // preload next ayah
+const NUF="https://cdn.mp3quran.net/audio/ahmad-nufais/r1/";   // files that match mp3quran's timing data (read 259)
+const timings={};
+async function getTimings(s){
+  if(timings[s])return timings[s];
+  const r=await fetch(`https://mp3quran.net/api/v3/ayat_timing?surah=${s}&read=259`);
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  const m={};for(const x of await r.json())m[x.ayah]=[x.start_time,x.end_time];
+  if(!m[1])throw new Error("no timings");
+  return timings[s]=m;
 }
+function segRange(m,it){return it.a===0?(m[0]||[0,m[1][0]]):m[it.a]}
+let seg=null,segRaf=0,playToken=0;
+function cancelSeg(){seg=null;cancelAnimationFrame(segRaf)}
+function applyReciter(){
+  $("reciter").value=st.rec;
+  $("recName").textContent=t(st.rec==="nufais"?"reciterN":"reciter");
+  $("qualityOpt").hidden=st.rec==="nufais";
+}
+async function playCurrent(){
+  clearTimeout(st.timer);cancelSeg();
+  const it=st.queue[st.i];if(!it){stop();return}
+  const tok=++playToken;
+  audio.playbackRate=+$("speed").value;
+  $("status").textContent="";
+  highlight(true);
+  if(st.rec==="hudhaifi"){
+    const [s,a]=it.a===0?[1,1]:[it.s,it.a];
+    audio.src=url(s,a);audio.playbackRate=+$("speed").value;
+    audio.play().catch(()=>{$("status").textContent=t("errStart");setPlaying(false)});
+    const nx=st.queue[st.i+1];if(nx){const [ns,na]=nx.a===0?[1,1]:[nx.s,nx.a];pre.src=url(ns,na)}  // preload next ayah
+    return;
+  }
+  let m;
+  try{if(!timings[it.s])$("status").textContent=t("loading");m=await getTimings(it.s)}
+  catch(e){if(tok===playToken){$("status").textContent=t("errTiming");setPlaying(false)}return}
+  if(tok!==playToken||!st.playing)return;
+  const r=segRange(m,it);
+  const file=NUF+pad(it.s)+".mp3";
+  if(audio.src!==file)audio.src=file;
+  seg={start:r[0]/1000,end:r[1]/1000,s:it.s};
+  const go=()=>{if(tok!==playToken)return;audio.currentTime=seg.start;audio.playbackRate=+$("speed").value;
+    audio.play().then(()=>{$("status").textContent=""}).catch(()=>{$("status").textContent=t("errStart");setPlaying(false)})};
+  if(audio.readyState>=1)go();else audio.addEventListener("loadedmetadata",go,{once:true});
+  watchSeg();
+  const nx=st.queue.find((x,k)=>k>st.i&&x.s!==it.s);if(nx)getTimings(nx.s).catch(()=>{});  // fetch the next surah's timings early
+}
+// Al-Nufais: one file per surah, so stop at the ayah's end time (or flow straight into the next ayah when nothing needs a pause)
+function segCheck(){
+  if(!seg||audio.paused||audio.currentTime<seg.end-0.04)return;
+  const it=st.queue[st.i],nx=st.queue[st.i+1];
+  const reps=it&&it.a?+$("repAyah").value:1;
+  if($("gap").value==="0"&&st.ayRep+1>=reps&&nx&&nx.s===seg.s&&timings[nx.s]){
+    const r=segRange(timings[nx.s],nx);
+    if(Math.abs(r[0]/1000-seg.end)<0.6){st.i++;st.ayRep=0;seg={start:r[0]/1000,end:r[1]/1000,s:nx.s};highlight(true);return}
+  }
+  const d=(seg.end-seg.start)*1000/audio.playbackRate;cancelSeg();audio.pause();onItemEnd(d);
+}
+function watchSeg(){cancelAnimationFrame(segRaf);const tick=()=>{if(!seg)return;segCheck();segRaf=requestAnimationFrame(tick)};segRaf=requestAnimationFrame(tick)}
+audio.addEventListener("timeupdate",segCheck);   // keeps working when the screen is off and animation frames stop
 function advance(){
   const it=st.queue[st.i];
   const reps=it&&it.a?+$("repAyah").value:1;
@@ -347,23 +398,28 @@ function advance(){
   }
   playCurrent();
 }
-audio.addEventListener("ended",()=>{
+function onItemEnd(durMs){
   if(!st.playing)return;
   const g=$("gap").value, it=st.queue[st.i];
-  const ms=g==="len"?(it&&it.a?audio.duration*1000/audio.playbackRate:0):(+g*1000);
+  const ms=g==="len"?(it&&it.a?durMs:0):(+g*1000);
   if(ms>0){$("status").textContent=g==="len"?t("turn"):"";st.timer=setTimeout(()=>{$("status").textContent="";advance()},ms)}
   else advance();
+}
+audio.addEventListener("ended",()=>{
+  if(st.rec==="hudhaifi")onItemEnd(audio.duration*1000/audio.playbackRate);
+  else if(seg){const d=(seg.end-seg.start)*1000/audio.playbackRate;cancelSeg();onItemEnd(d)}
 });
 audio.addEventListener("error",()=>{if(audio.src&&st.playing){$("status").textContent=t("errLoad");setPlaying(false)}});
 audio.addEventListener("waiting",()=>{$("status").textContent=t("loading")});
 audio.addEventListener("playing",()=>{$("status").textContent=""});
 function setPlaying(p){st.playing=p;$("playBtn").textContent=p?t("pause"):t("play")}
-function stop(){clearTimeout(st.timer);audio.pause();setPlaying(false);$("status").textContent=""}
+function stop(){clearTimeout(st.timer);playToken++;cancelSeg();audio.pause();setPlaying(false);$("status").textContent=""}
 function jumpTo(s,a){const k=st.queue.findIndex(x=>x.s===s&&x.a===a);if(k<0)return;st.i=k;st.ayRep=0;setPlaying(true);playCurrent()}
 $("playBtn").onclick=()=>{
   if(st.playing){audio.pause();clearTimeout(st.timer);setPlaying(false);return}
   setPlaying(true);
-  if(audio.src&&audio.currentTime>0&&!audio.ended){audio.play().catch(()=>{});highlight(true)}else playCurrent();
+  const mid=st.rec==="hudhaifi"?(audio.src&&audio.currentTime>0&&!audio.ended):!!seg;
+  if(mid){audio.play().catch(()=>{});highlight(true);if(seg)watchSeg()}else playCurrent();
 };
 $("nextBtn").onclick=()=>{if(st.i<st.queue.length-1){st.i++;st.ayRep=0;setPlaying(true);playCurrent()}};
 $("prevBtn").onclick=()=>{if(st.i>0){st.i--;st.ayRep=0;setPlaying(true);playCurrent()}};
@@ -371,6 +427,7 @@ document.querySelectorAll("#partSeg button").forEach(b=>b.onclick=()=>selectHizb
 ["repAyah","repRange","gap"].forEach(k=>$(k).onchange=()=>{save();highlight()});
 $("speed").onchange=()=>{audio.playbackRate=+$("speed").value;save()};
 $("quality").onchange=()=>save();
+$("reciter").onchange=()=>{stop();st.rec=$("reciter").value;audio.removeAttribute("src");audio.load();applyReciter();highlight();save()};
 $("menuBtn").onclick=()=>$("side").classList.toggle("open");
 $("langBtn").onclick=()=>{lang=lang==="ar"?"en":"ar";applyLang();buildIndex();renderText();fillCustom();header();highlight();save()};
 document.addEventListener("keydown",e=>{if(e.target.tagName==="SELECT")return;if(e.code==="Space"){e.preventDefault();$("playBtn").click()}});
