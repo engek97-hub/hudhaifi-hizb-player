@@ -294,7 +294,7 @@ async function renderText(){
     const sec=document.createElement("section");sec.className="mpage";sec.dataset.p=n;
     sec.innerHTML=`<div class="mtop"><span>سورة ${sname(first[2])}</span><span>الجزء ${arN(juzOf(first[2],first[3]))}</span></div>`;
     const ml=document.createElement("div");ml.className="mlines";
-    for(const line of pg.l){
+    for(const line of (n<=2?pg.l.filter(l=>l.length):pg.l)){   // pages 1-2 are short, like the print
       const row=document.createElement("div");row.className="ml";
       for(const tk of line){
         const sp=document.createElement("span");sp.textContent=String.fromCodePoint(tk[1]);
@@ -319,17 +319,22 @@ async function renderText(){
 }
 // Size each page so its longest line fills the width; shorter lines (pages 1-2, surah ends) are centred like the printed mushaf
 function fitPages(){
-  document.querySelectorAll(".mpage").forEach(sec=>{
-    const ml=sec.querySelector(".mlines"),n=sec.dataset.p,rows=[...ml.children];
-    if(!fitCache[n]){
-      ml.style.fontSize="100px";let mx=0;
-      const ws=rows.map(r=>{if(r.classList.contains("hd")||r.classList.contains("bsm")||!r.children.length)return 0;
-        let w=0;for(const c of r.children)w+=c.getBoundingClientRect().width;mx=Math.max(mx,w);return w});
-      fitCache[n]={mx,ws};
-    }
-    const {mx,ws}=fitCache[n];
-    ml.style.fontSize=(ml.clientWidth*100/mx*0.99)+"px";
-    rows.forEach((r,i)=>{if(ws[i]&&ws[i]<mx*0.8)r.classList.add("c")});
+  const secs=[...document.querySelectorAll(".mpage")];
+  secs.forEach(sec=>{                       // measure each page once at 100px
+    const ml=sec.querySelector(".mlines"),n=sec.dataset.p;
+    if(fitCache[n])return;
+    ml.style.fontSize="100px";let mx=0;
+    const ws=[...ml.children].map(r=>{if(r.classList.contains("hd")||r.classList.contains("bsm")||!r.children.length)return 0;
+      let w=0;for(const c of r.children)w+=c.getBoundingClientRect().width;mx=Math.max(mx,w);return w});
+    fitCache[n]={mx,ws};
+  });
+  const full=Object.entries(fitCache).filter(([k])=>+k>2).map(([,v])=>v.mx).sort((a,b)=>a-b);
+  const typical=full.length?full[full.length>>1]:0;
+  secs.forEach(sec=>{
+    const ml=sec.querySelector(".mlines"),n=+sec.dataset.p,{mx,ws}=fitCache[n];
+    const ref=n<=2?(typical||mx*1.25):mx;   // pages 1-2 use the same type size as the rest of the mushaf
+    ml.style.fontSize=(ml.clientWidth*100/ref*0.99)+"px";
+    [...ml.children].forEach((r,i)=>{if(ws[i]&&(n<=2||ws[i]<mx*0.8))r.classList.add("c")});
   });
 }
 let fitT;addEventListener("resize",()=>{clearTimeout(fitT);fitT=setTimeout(fitPages,150)});
